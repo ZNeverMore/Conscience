@@ -181,21 +181,21 @@ router.get('/vote/nat', function (req, res) {
                 timestamp: list[a].timestamp
               }
               voteTxList.push(item)
-              // axios.post(getEventByHashUrl,
-              //   JSON.stringify({hash: hash}),
-              //   {
-              //     headers: {
-              //       'Content-Type': 'application/json'
-              //     }
-              //   }).then(response => {
-              //   let events = response.data.result.events
-              //   for (let b = 0; b < events.length; b++) {
-              //     if (events[b].topic === voteTopic) {
-              //       let result = JSON.parse(events[b].data)
-              //       voteRewardNat += parseFloat(result.reward)
-              //     }
-              //   }
-              // })
+              axios.post(getEventByHashUrl,
+                JSON.stringify({hash: hash}),
+                {
+                  headers: {
+                    'Content-Type': 'application/json'
+                  }
+                }).then(response => {
+                let events = response.data.result.events
+                for (let b = 0; b < events.length; b++) {
+                  if (events[b].topic === voteTopic) {
+                    let result = JSON.parse(events[b].data)
+                    voteRewardNat += parseFloat(result.reward)
+                  }
+                }
+              })
             }
           }
         }
@@ -203,33 +203,33 @@ router.get('/vote/nat', function (req, res) {
     }
   })
   setTimeout(function () {
-    console.log('timeout voteTxList.length: ', voteTxList.length)
-    for (let c = 0; c < voteTxList.length; c++) {
-      let hash = voteTxList[c].hash
-      axios.post(getEventByHashUrl,
-        JSON.stringify({hash: hash}),
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }).then(response => {
-        let events = response.data.result.events
-        for (let b = 0; b < events.length; b++) {
-          if (events[b].topic === voteTopic) {
-            let result = JSON.parse(events[b].data)
-            voteRewardNat += parseFloat(result.reward)
-          }
-        }
-      })
-    }
-    setTimeout(function () {
-      res.json({
-        voteRewardNat: parseInt(voteRewardNat / 10),
-        start: start,
-        end: end,
-        length: voteTxList.length
-      })
-    }, 15000)
+    // console.log('timeout voteTxList.length: ', voteTxList.length)
+    // for (let c = 0; c < voteTxList.length; c++) {
+    //   let hash = voteTxList[c].hash
+    //   axios.post(getEventByHashUrl,
+    //     JSON.stringify({hash: hash}),
+    //     {
+    //       headers: {
+    //         'Content-Type': 'application/json'
+    //       }
+    //     }).then(response => {
+    //     let events = response.data.result.events
+    //     for (let b = 0; b < events.length; b++) {
+    //       if (events[b].topic === voteTopic) {
+    //         let result = JSON.parse(events[b].data)
+    //         voteRewardNat += parseFloat(result.reward)
+    //       }
+    //     }
+    //   })
+    // }
+    // setTimeout(function () {
+    res.json({
+      voteRewardNat: parseInt(voteRewardNat / 10),
+      start: start,
+      end: end,
+      length: voteTxList.length
+    })
+    // }, 15000)
   }, 5000)
 })
 
