@@ -1,4 +1,7 @@
 
+const express = require('express');
+const router = express.Router();
+
 const axios = require('axios')
 const pledgeAndNrAddress = 'n1EoNsJNXG1tN3z9rvjwPKoBXbJMqAjmESC'
 const voteAddress = 'n1pADU7jnrvpPzcWusGkaizZoWgUywMRGMY'
@@ -158,50 +161,81 @@ router.get('/vote/nat', function (req, res) {
     }
   }
   axios.get(getTxUrl, firstParam).then(response => {
-    let totalPage = response.data.data.totalPage
-    console.log('voteTotalPage: ', totalPage)
-    for (let i = 1; i <= totalPage; i++) {
-      console.log(i)
-      let params = {
-        params: {
-          a: voteAddress,
-          p: i
+    let list = response.data.data.txnList
+    for (let a = 0; a < list.length; a++) {
+      if (list[a].status === 1) {
+        let hash = list[a].hash
+        let json = JSON.parse(list[a].data)
+        if (json.Function === 'vote') {
+          let item = {
+            hash: hash,
+            timestamp: list[a].timestamp
+          }
+          voteTxList.push(item)
+          axios.post(getEventByHashUrl,
+            JSON.stringify({hash: hash}),
+            {
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }).then(response => {
+            let events = response.data.result.events
+            for (let b = 0; b < events.length; b++) {
+              if (events[b].topic === voteTopic) {
+                let result = JSON.parse(events[b].data)
+                voteRewardNat += parseFloat(result.reward)
+              }
+            }
+          })
         }
       }
-      axios.get(getTxUrl, params).then(response => {
-        let list = response.data.data.txnList
-        console.log('response -> ' + i + ': list :' + JSON.stringify(list))
-        for (let a = 0; a < list.length; a++) {
-          if (list[a].status === 1) {
-            let hash = list[a].hash
-            let json = JSON.parse(list[a].data)
-            if (json.Function === 'vote') {
-              let item = {
-                hash: hash,
-                timestamp: list[a].timestamp
-              }
-              voteTxList.push(item)
-              axios.post(getEventByHashUrl,
-                JSON.stringify({hash: hash}),
-                {
-                  headers: {
-                    'Content-Type': 'application/json'
-                  }
-                }).then(response => {
-                let events = response.data.result.events
-                for (let b = 0; b < events.length; b++) {
-                  if (events[b].topic === voteTopic) {
-                    let result = JSON.parse(events[b].data)
-                    voteRewardNat += parseFloat(result.reward)
-                  }
-                }
-              })
-            }
-          }
-        }
-      })
     }
   })
+  // axios.get(getTxUrl, firstParam).then(response => {
+  //   let totalPage = response.data.data.totalPage
+  //   console.log('voteTotalPage: ', totalPage)
+  //   for (let i = 1; i <= totalPage; i++) {
+  //     console.log(i)
+  //     let params = {
+  //       params: {
+  //         a: voteAddress,
+  //         p: i
+  //       }
+  //     }
+  //     axios.get(getTxUrl, params).then(response => {
+  //       let list = response.data.data.txnList
+  //       console.log('response -> ' + i + ': list :' + JSON.stringify(list))
+  //       for (let a = 0; a < list.length; a++) {
+  //         if (list[a].status === 1) {
+  //           let hash = list[a].hash
+  //           let json = JSON.parse(list[a].data)
+  //           if (json.Function === 'vote') {
+  //             let item = {
+  //               hash: hash,
+  //               timestamp: list[a].timestamp
+  //             }
+  //             voteTxList.push(item)
+  //             axios.post(getEventByHashUrl,
+  //               JSON.stringify({hash: hash}),
+  //               {
+  //                 headers: {
+  //                   'Content-Type': 'application/json'
+  //                 }
+  //               }).then(response => {
+  //               let events = response.data.result.events
+  //               for (let b = 0; b < events.length; b++) {
+  //                 if (events[b].topic === voteTopic) {
+  //                   let result = JSON.parse(events[b].data)
+  //                   voteRewardNat += parseFloat(result.reward)
+  //                 }
+  //               }
+  //             })
+  //           }
+  //         }
+  //       }
+  //     })
+  //   }
+  // })
   setTimeout(function () {
     // console.log('timeout voteTxList.length: ', voteTxList.length)
     // for (let c = 0; c < voteTxList.length; c++) {
